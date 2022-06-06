@@ -4,8 +4,10 @@ deepsix is an awesome tool to use when you need any random string such as a medi
 deepsix 2.1ap (C) 2022 Eric Andresen  -- A Python Port
 
 deepsix [-u -l -n -s -v -H -S] [-c Characters][-i Iterations][-p Count]
+
 If no arguments are included deepSix will default to Uppercase and Numeric output
 Python versions of deepsix require a space between arguments and their values
+
 -u Include Uppercase characters
 -l Include lowercase characters
 -n Include numbers
