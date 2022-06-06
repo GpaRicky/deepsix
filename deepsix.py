@@ -163,8 +163,8 @@ if '-i' in sys.argv:
 	INT_I = sys.argv[I_INDEX + 1]
 	INT_I = int(INT_I)
 
-if '-p' in sys.argv:
-	P_INDEX = sys.argv.index('-p')
+if '-P' in sys.argv:
+	P_INDEX = sys.argv.index('-P')
 	INT_P = sys.argv[P_INDEX + 1]
 	INT_P = int(INT_P)
 	INT_P_KEEP = int(INT_P)
@@ -204,8 +204,8 @@ if FLAG_HFLAG:
 	print("If no -c or -i are provided they default to 6 characters and 1 Interations")
 	print(" ")
 	print("Example:     deepsix -u -l -n -s -c 12 -i 10 -p 6  ** output complex  passwords")
-	print("Example:     deepsix -H -t -c 12 -i 10 -p 2        ** output random hex strings")
-	print("Example:     deepsix                            ** output a random ID")
+	print("Example:     deepsix -H -t -c 12 -i 10 -P 2        ** output random hex strings")
+	print("Example:     deepsix                               ** output a random ID")
 	print("Author :     Eric Andresen")
 	print("Email  :     andresen.eric@gmail.com please add deepsix to the subject for all inqueries")
 	print("License:     MIT Open Source")
