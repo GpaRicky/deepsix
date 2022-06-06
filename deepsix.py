@@ -1,6 +1,5 @@
 #!/opt/homebrew/bin/python3
 
-"""
 ###############################################################################
 # FILENAME :  deepsix.py
 # LANGUAGE: Python3
@@ -11,6 +10,7 @@
 #
 #
 # AUTHOR 	:  Eric Andresen        START DATE :    01 May 2022
+#									  END DATE :    05 Jun 2022
 # EMAIL 	: andresen.eric@gmail.com please add deepsix to the subject for
 #             all inqueries
 #
@@ -26,8 +26,7 @@
 #                    values
 #			2.0      Complete re-write some functions 100% new and optimized
 #                    codebase
-#			2.1ap     A Python port of DeepSix 01 May 2022 (Alpha)(Python)
-#
+#			2.1bp     A Python port of DeepSix (Beta, Python)
 # License
 #   MIT License
 #
@@ -51,16 +50,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ###############################################################################
-"""
-
-	
 #Import external modules
 #import argparse
 import sys 
 import time #Time modiule is used for both the Runtime data and to seed the Random Module
 import random
 
-#Configure Symbol Set possibilities
+#Configure Charachter Set possibilities
 #based on program arguments various symbol sets are selected
 STR_SYMBOL_SET = ""                       #zero out the selecxted Symbol set
 STR_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"  # if -u is used this is added to STR_SYMBOL_SET
@@ -68,11 +64,13 @@ STR_HEX   = "ABCDEF"                      # if -H is used this and STR_NUMERIC i
 STR_LOWER = "abcdefghijklmnopqustuvwxyz"  # if -l is used this is added to STR_SYMBOL_SET
 STR_NUMERIC = "0123456789"                # if -n is user this is added to STR_SYMBOL_SET
 STR_SPACE = " "                           # if -S is used this is added to STR_SYMBOL_SET
-STR_OUTPUT = ""                           # Zero out the final output string 
-#Considered password safe symbols recommended by OWASP and IBM.
-#https://www.ibm.com/support/knowledgecenter/SSV2LR/com.ibm.wbpm.imuc.doc/topics/..
-#..rsec_characters.html
-#https://owasp.org/www-community/password-special-characters
+STR_TO_DISPLAY = ""                           # Zero out the final string that is displayed 
+STR_DELIMITER = ""
+
+# Use only password safe symbols when setting symbol set. Recommended by OWASP and IBM.
+# https://www.ibm.com/support/knowledgecenter/SSV2LR/com.ibm.wbpm.imuc.doc/topics/..
+# ..rsec_characters.html
+# https://owasp.org/www-community/password-special-characters
 
 STR_SYMBOLS = "!$%&()*+-./=?@[]^{}_"     #if -s is used this is added to STR_SYMBOL_SET
 
@@ -90,7 +88,7 @@ FLAG_HASP = False
 FLAG_PRETTY = False 
 
 #Instantiate and clear variables for arguments that pass values.
-INT_C = 0 #Default to 5 unless explicitly changed - number of chars to ourput
+INT_C = 0  #Default to 5 unless explicitly changed - number of chars to ourput
 INT_C_KEEP = 0 # This is used to reset the chars between iterations since iterations are decremented
 INT_I = 0 #Number of iterations to run - default to 1 if not explicitly changed 
 INT_P = 0 #Use P to format output by adding a dash every x chars where x is defined by INT_P
@@ -107,42 +105,43 @@ INT_P_KEEP = 0 # this is useds to reset P by transfering K to P after every n-th
 # is only acted on once.                                |
 #-------------------------------------------------------+
 
-#Evaluate each of the Flag oriented arguments and set any required flags from False to True.
+# Evaluate each of the Flag oriented arguments and set any required flags from False to True.
 
-#Was help requested?
+# Was help requested?
 if '-h' in sys.argv: 
-		FLAG_HFLAG = True
-#Case -u push upper case characters into the Symbol Set
-if '-u' in sys.argv:
-		FLAG_UPPER = True 
-		STR_SYMBOL_SET += STR_UPPER
-#Case -l push lower case characters into the Symbol Set
-if '-l' in sys.argv:
-		FLAG_LOWER = True 
-		STR_SYMBOL_SET += STR_LOWER
-#Case -n push numeric characters into the Symbol Set
-if '-n' in sys.argv: 
+	FLAG_HFLAG = True
+
+# Case -u push upper case characters into the Symbol Set
+if '-u' in sys.argv: 
+	FLAG_UPPER = True 
+	STR_SYMBOL_SET += STR_UPPER
+
+if '-l' in sys.argv:# Case -l push lower case characters into the Symbol Set
+	FLAG_LOWER = True 
+	STR_SYMBOL_SET += STR_LOWER
+
+if '-n' in sys.argv: # Case -n push numeric characters into the Symbol Set
 	FLAG_NUMERIC = True
 	STR_SYMBOL_SET += STR_NUMERIC
-#Case -s push symbols into the Symbol Set
-if '-s' in sys.argv: 
+
+if '-s' in sys.argv: # Case -s push symbols into the Symbol Set
 	FLAG_SYMBOLS = True
 	STR_SYMBOL_SET += STR_SYMBOLS	
-#Case -S pushes a space into the Symbol Set
-if '-S' in sys.argv: 
+
+if '-S' in sys.argv: # Case -S pushes a space into the Symbol Set
 	FLAG_SPACE = True
 	STR_SYMBOL_SET += STR_SPACE
-#Case -H push Hex symbols into the Symbol Set
-if '-H' in sys.argv: 
+
+if '-H' in sys.argv: # Case -H push Hex symbols into the Symbol Set
 	FLAG_HEX = True
 	STR_SYMBOL_SET = "" # Once HEX is selected this will override other symbols selected
 	STR_SYMBOL_SET += STR_NUMERIC # HEX includes numeric chars
 	STR_SYMBOL_SET += STR_HEX # HEX includes alpha A-F
-#Check and see if runtime timestamp was requested
-if '-t' in sys.argv:
+
+if '-t' in sys.argv: # Check and see if runtime timestamp was requested
 	FLAG_TFLAG = True
-#Check to see if version information was requested
-if  '-v' in sys.argv:
+
+if  '-v' in sys.argv: # Check to see if version information was requested
 	if FLAG_HFLAG:
 		FLAG_VFLAG = False
 	else:
@@ -153,29 +152,35 @@ if FLAG_VFLAG and FLAG_HFLAG:
 	FLAG_VFLAG = 0 # This will suppress duplicate version informaition
 	
 #Now Check all values that include arguments so that we know how to manage the arguments with values
-if '-c' in sys.argv:
+if '-c' in sys.argv: # Idf the charachters a
 	C_INDEX = sys.argv.index('-c')
 	INT_C = sys.argv[C_INDEX + 1]
 	INT_C = int(INT_C)
 	INT_C_KEEP = int(INT_C)
+
 if '-i' in sys.argv:
 	I_INDEX = sys.argv.index('-i')
 	INT_I = sys.argv[I_INDEX + 1]
 	INT_I = int(INT_I)
+
 if '-p' in sys.argv:
 	P_INDEX = sys.argv.index('-p')
 	INT_P = sys.argv[P_INDEX + 1]
 	INT_P = int(INT_P)
 	INT_P_KEEP = int(INT_P)
 	FLAG_PRETTY = True 
+
 if INT_C == 0: 
-	INT_C = 5
-	INT_C_KEEP = 5
+	INT_C = 6
+	INT_C_KEEP = INT_C 
+
 if INT_I == 0:
 	INT_I = 1
+
 if len(str(STR_SYMBOL_SET)) == 0:
 	STR_SYMBOL_SET += STR_UPPER
 	STR_SYMBOL_SET += STR_NUMERIC
+
 #Now act on all of the FLAGS 
 if FLAG_VFLAG:
    	print ("deepsix 2.1ap (C) 2022 Eric Andresen  -- A Python Port")
@@ -205,29 +210,35 @@ if FLAG_HFLAG:
 	print("Email  :     andresen.eric@gmail.com please add deepsix to the subject for all inqueries")
 	print("License:     MIT Open Source")
 	print(" ")
-#print("")
-#print("Debug Symbols")
-#print("INT_C =" + str(INT_C))    
-#print("INT_I =" + str(INT_I))    
-#print("INT_P =" + str(INT_P)) 
 
 #This section is where the random seed is selected. This is done by looking at the data
-#print ("INT_I is " + str(INT_I))	
+#print ("INT_I is " + str(INT_I))	 
 INT_SECONDS_EPOCH = ((time.time()% 1))
 random.seed(INT_SECONDS_EPOCH)
 
-# A loop is needed to create the random strings that are needed. 	
+# A loop is needed to create the random strings that are needed. 
+# Everything before this point is basically managing options and selecting flags
+# this is where the real work is done.  	
 if FLAG_VFLAG != True and FLAG_HFLAG != True:
 	while INT_I > 0:
-		while INT_C > 0:
-			STR_OUTPUT = STR_OUTPUT + STR_SYMBOL_SET[random.randrange(0,(len(STR_SYMBOL_SET)),1)]
-			INT_C = INT_C - 1
-		else:
-			INT_C = INT_C - 1
-		
-		print (STR_OUTPUT)
+
+# start a loop from 0 to INT_C and increment - this ensures excess chars are at the end of the string
+# The if (INT_P > 0) below ensures that a - will never be before the first char of the output
+# Modulo is used to determine when INT_C and INT_P are equally divisible - that is when a 
+# delimeter needs to be added 
+
+		for INT_C in range (0,INT_C): 
+			if (INT_P > 0) and (INT_C > 0) and ((INT_C % INT_P ) == 0) and (INT_C_KEEP != INT_C):
+				STR_TO_DISPLAY = STR_TO_DISPLAY + "-"
+
+
+			STR_TO_DISPLAY = STR_TO_DISPLAY + STR_SYMBOL_SET[random.randrange(0,(len(STR_SYMBOL_SET)),1)]
+			INT_C = INT_C + 1	
+
+		INT_C = INT_C - 1		
+		print (STR_TO_DISPLAY)
 		INT_C = INT_C_KEEP
-		STR_OUTPUT = ""
+		STR_TO_DISPLAY = ""
 		INT_I = INT_I -1
 
 
@@ -235,4 +246,3 @@ if FLAG_VFLAG != True and FLAG_HFLAG != True:
 # then print the runtime		
 if FLAG_TFLAG:
 	print ("Runtime is:" + time.asctime())
-
