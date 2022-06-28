@@ -1,5 +1,6 @@
 #!/opt/homebrew/bin/python3
 
+"""
 ###############################################################################
 # FILENAME :  deepsix.py
 # LANGUAGE: Python3
@@ -10,7 +11,6 @@
 #
 #
 # AUTHOR 	:  Eric Andresen        START DATE :    01 May 2022
-#									  END DATE :    05 Jun 2022
 # EMAIL 	: andresen.eric@gmail.com please add deepsix to the subject for
 #             all inqueries
 #
@@ -26,7 +26,9 @@
 #                    values
 #			2.0      Complete re-write some functions 100% new and optimized
 #                    codebase
-#			2.1bp     A Python port of DeepSix (Beta, Python)
+#			2.1p     A Python port of DeepSix 01 May 2022 (Python)
+#           2.2p     Added in UUID Support
+#
 # License
 #   MIT License
 #
@@ -50,11 +52,13 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 ###############################################################################
+"""	
 #Import external modules
 #import argparse
 import sys 
 import time #Time modiule is used for both the Runtime data and to seed the Random Module
 import random
+import uuid
 
 #Configure Charachter Set possibilities
 #based on program arguments various symbol sets are selected
@@ -67,10 +71,10 @@ STR_SPACE = " "                           # if -S is used this is added to STR_S
 STR_TO_DISPLAY = ""                           # Zero out the final string that is displayed 
 STR_DELIMITER = ""
 
-# Use only password safe symbols when setting symbol set. Recommended by OWASP and IBM.
-# https://www.ibm.com/support/knowledgecenter/SSV2LR/com.ibm.wbpm.imuc.doc/topics/..
-# ..rsec_characters.html
-# https://owasp.org/www-community/password-special-characters
+#Include Symbols in the Charachter set, use only password safe symbols recommended by OWASP and IBM.
+#https://www.ibm.com/support/knowledgecenter/SSV2LR/com.ibm.wbpm.imuc.doc/topics/..
+#..rsec_characters.html
+#https://owasp.org/www-community/password-special-characters
 
 STR_SYMBOLS = "!$%&()*+-./=?@[]^{}_"     #if -s is used this is added to STR_SYMBOL_SET
 
@@ -86,6 +90,7 @@ FLAG_VFLAG = False
 FLAG_TFLAG = False
 FLAG_HASP = False
 FLAG_PRETTY = False 
+FLAG_UUID = False
 
 #Instantiate and clear variables for arguments that pass values.
 INT_C = 0  #Default to 5 unless explicitly changed - number of chars to ourput
@@ -152,7 +157,7 @@ if FLAG_VFLAG and FLAG_HFLAG:
 	FLAG_VFLAG = 0 # This will suppress duplicate version informaition
 	
 #Now Check all values that include arguments so that we know how to manage the arguments with values
-if '-c' in sys.argv: # Idf the charachters a
+if '-c' in sys.argv:
 	C_INDEX = sys.argv.index('-c')
 	INT_C = sys.argv[C_INDEX + 1]
 	INT_C = int(INT_C)
@@ -163,13 +168,18 @@ if '-i' in sys.argv:
 	INT_I = sys.argv[I_INDEX + 1]
 	INT_I = int(INT_I)
 
-if '-P' in sys.argv:
-	P_INDEX = sys.argv.index('-P')
+if '-p' in sys.argv:
+	P_INDEX = sys.argv.index('-p')
 	INT_P = sys.argv[P_INDEX + 1]
 	INT_P = int(INT_P)
 	INT_P_KEEP = int(INT_P)
 	FLAG_PRETTY = True 
 
+if '-uuid' in sys.argv: # Case -S pushes a space into the Symbol Set
+	FLAG_UUID = True
+
+
+#Set the defaults for a few values in the event none are provided
 if INT_C == 0: 
 	INT_C = 6
 	INT_C_KEEP = INT_C 
@@ -183,12 +193,13 @@ if len(str(STR_SYMBOL_SET)) == 0:
 
 #Now act on all of the FLAGS 
 if FLAG_VFLAG:
-   	print ("deepsix 2.1ap (C) 2022 Eric Andresen  -- A Python Port")
+   	print ("deepsix 2.2p (C) 2022 Eric Andresen  -- A Python Port")
 
 if FLAG_HFLAG:
 	print("deepsix [-u -l -n -s -v -H -S] [-c Characters][-i Iterations][-p Count]")
 	print("If no arguments are included deepSix will default to Uppercase and Numeric output")
 	print("Python versions of deepsix require a space between arguments and their values")
+	print("-uuid Output a UUID - Combine with -i for multiples")
 	print("-u Include Uppercase characters")
 	print("-l Include lowercase characters")
 	print("-n Include numbers")
@@ -204,22 +215,22 @@ if FLAG_HFLAG:
 	print("If no -c or -i are provided they default to 6 characters and 1 Interations")
 	print(" ")
 	print("Example:     deepsix -u -l -n -s -c 12 -i 10 -p 6  ** output complex  passwords")
-	print("Example:     deepsix -H -t -c 12 -i 10 -P 2        ** output random hex strings")
-	print("Example:     deepsix                               ** output a random ID")
+	print("Example:     deepsix -H -t -c 12 -i 10 -p 2        ** output random hex strings")
+	print("Example:     deepsix                            ** output a random ID")
 	print("Author :     Eric Andresen")
 	print("Email  :     andresen.eric@gmail.com please add deepsix to the subject for all inqueries")
 	print("License:     MIT Open Source")
 	print(" ")
 
 #This section is where the random seed is selected. This is done by looking at the data
-#print ("INT_I is " + str(INT_I))	 
+#print ("INT_I is " + str(INT_I))	
 INT_SECONDS_EPOCH = ((time.time()% 1))
 random.seed(INT_SECONDS_EPOCH)
 
 # A loop is needed to create the random strings that are needed. 
 # Everything before this point is basically managing options and selecting flags
-# this is where the real work is done.  	
-if FLAG_VFLAG != True and FLAG_HFLAG != True:
+# this is where the real work is done. 	
+if FLAG_VFLAG != True and FLAG_HFLAG != True and FLAG_UUID != True:
 	while INT_I > 0:
 
 # start a loop from 0 to INT_C and increment - this ensures excess chars are at the end of the string
@@ -230,8 +241,6 @@ if FLAG_VFLAG != True and FLAG_HFLAG != True:
 		for INT_C in range (0,INT_C): 
 			if (INT_P > 0) and (INT_C > 0) and ((INT_C % INT_P ) == 0) and (INT_C_KEEP != INT_C):
 				STR_TO_DISPLAY = STR_TO_DISPLAY + "-"
-
-
 			STR_TO_DISPLAY = STR_TO_DISPLAY + STR_SYMBOL_SET[random.randrange(0,(len(STR_SYMBOL_SET)),1)]
 			INT_C = INT_C + 1	
 
@@ -239,6 +248,11 @@ if FLAG_VFLAG != True and FLAG_HFLAG != True:
 		print (STR_TO_DISPLAY)
 		INT_C = INT_C_KEEP
 		STR_TO_DISPLAY = ""
+		INT_I = INT_I -1
+
+if FLAG_UUID == True:
+	while INT_I > 0:
+		print (uuid.uuid4())
 		INT_I = INT_I -1
 
 
