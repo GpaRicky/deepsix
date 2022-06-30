@@ -5,6 +5,8 @@ deepsix 2.1ap (C) 2022 Eric Andresen  -- A Python Port
 
 deepsix [-u -l -n -s -v -H -S] [-c Characters][-i Iterations][-p Count]
 
+The Python version of deepsix now supports generating UUIDs with the -uuid argument. This can be combined with the -i command to generate many UUIDs. At this time this function is only available in the Python build. 
+
 If no arguments are included deepSix will default to Uppercase and Numeric output
 Python versions of deepsix require a space between arguments and their values
 
